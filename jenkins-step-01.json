@@ -1,0 +1,28 @@
+node {
+    stage('Pull') {
+        git 'https://github.com/mkbahk/nginxscale.git'
+    }
+    stage('Unit Test') {
+    	sh(script: 'docker build --force-rm=true -t mkbahk/nginxscale:latest .')    
+    }
+    stage('Build') {
+        sh(script: 'docker build --force-rm=true -t mkbahk/nginxscale:latest .')    
+    }
+    stage('Tag') {
+        sh(script: 'docker tag mkbahk/nginxscale:latest mkbahk/nginxscale:2.1')
+    }
+    stage('Push') {
+        sh(script: 'docker login -u mkbahk -p "P@ssw0rd"' )
+        sh(script: 'docker push mkbahk/nginxscale:2.1' )
+        sh(script: 'docker push mkbahk/nginxscale:latest' )
+    }
+    stage('Deploy') {
+        try {
+            sh(script: 'docker stop nginxscale')
+            sh(script: 'docker rm nginxscale')
+        } catch(e) {
+            echo "No nginxscale container exists"
+        }
+        sh(script: 'docker run -d -p 8380:80 --name=nginxscale mkbahk/nginxscale:latest')
+    }
+}

@@ -1,0 +1,14 @@
+node {
+    stage('Pull') {
+    }
+    stage('Unit Test') {
+    }
+    stage('Build') {
+    }
+    stage('Tag') {
+    }
+    stage('Push') {
+    }
+    stage('Deploy') {
+    }
+}

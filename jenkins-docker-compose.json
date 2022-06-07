@@ -1,0 +1,20 @@
+node {
+	stage('Pull') {
+		git 'https://github.com/mkbahk/nginxscale.git'
+	}
+	stage('Unit Test') {
+		sh(script: 'docker-compose run --rm unit')
+	}
+	stage('Build') {
+		sh(script: 'docker-compose build app')
+	}
+	stage('Tag') {
+		// 생략 ...
+	}
+	stage('Push') {
+		// 생략 ...
+	}
+	stage('Deploy') {
+		sh(script: 'docker-compose up -d production')
+	}
+}
