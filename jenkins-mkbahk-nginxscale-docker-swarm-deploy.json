@@ -1,0 +1,34 @@
+node {
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER_ID', passwordVariable: 'DOCKER_USER_PASSWORD']]) {
+        stage('Pull') {
+            git 'https://github.com/mkbahk/nginxscale.git'
+        }
+        stage('Unit Test') {
+    	    try  {
+    	        sh(script: 'docker image rm mkbahk/nginxscale:latest')  
+            } 
+            catch(e) {
+                echo "No nginxscale container to remove"
+            }
+        }
+        stage('Build') {
+            sh(script: 'docker build --force-rm=true -t mkbahk/nginxscale:latest .')    
+        }
+        stage('Tag') {
+            sh(script: 'docker tag ${DOCKER_USER_ID}/nginxscale:latest ${DOCKER_USER_ID}/nginxscale:0.${BUILD_NUMBER}')
+        }
+        stage('Push') {
+            sh(script: 'docker login -u ${DOCKER_USER_ID} -p ${DOCKER_USER_PASSWORD}')
+            sh(script: 'docker push ${DOCKER_USER_ID}/nginxscale:0.${BUILD_NUMBER}')
+            sh(script: 'docker push ${DOCKER_USER_ID}/nginxscale:latest')
+        }
+        stage('Deploy') {
+            try {
+                sh(script: 'docker service create --name nginxnweb --publish 8380:80 --replicas 6 mkbahk/nginxscale:0.${BUILD_NUMBER}')
+            } catch(e) {
+                echo "nginxweb service exists"
+            }
+            sh(script: 'docker service update --image=mkbahk/nginxscale:0.${BUILD_NUMBER} nginxweb')
+        }
+    }
+}
