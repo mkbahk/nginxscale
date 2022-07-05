@@ -1,20 +1,29 @@
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+#kind: ReplicaSet
+kind: Deployment
 metadata:
-  name: nginxscale-pod
-  labels:
-    "app": "nginxscale"
+  name: nginxscale-deployment
 spec:
-  #
-  hostname: nginxscale-pod
-  subdomain: nginxscale-svc
-  #호스트 이름과 서브도메인이 K8s svc의 이름과 같은 경우로 지정된면 CoreDNS에 nginx2120.nginxweb-svc.default.svc.cluster.local 로 등록된다.
-  containers:
-  - name: nginxscale-container
-    image: mkbahk/nginxscale:latest
-    ports:
-    - containerPort: 80
+  replicas: 3
+  selector:
+    matchLabels:
+      "app": "nginxscale"
+  template:
+    metadata:
+      name: nginxscale-pod
+      labels:
+        "app": "nginxscale"
+    spec:
+      #
+      hostname: nginxscale-pod
+      subdomain: nginxscale-svc
+      #호스트 이름과 서브도메인이 K8s svc의 이름과 같은 경우로 지정된면 CoreDNS에 nginx2120.nginxweb-svc.default.svc.cluster.local 로 등록된다.
+      containers:
+      - name: nginxscale-container
+        image: mkbahk/nginxscale:latest
+        ports:
+        - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -25,7 +34,7 @@ spec:
     "app": "nginxscale"
   ports:
   - protocol: TCP
-    port: 8686
+    port: 80
     targetPort: 80
   type: LoadBalancer
 ---
